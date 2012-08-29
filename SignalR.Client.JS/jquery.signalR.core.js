@@ -24,7 +24,7 @@
     
     var signalR,
         _connection,
-        _pageLoaded = false,
+        _pageLoaded = (window.document.readyState === "complete"),
         _pageWindow = $(window),
 
         events = {
