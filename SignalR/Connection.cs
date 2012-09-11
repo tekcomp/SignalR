@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -19,6 +20,7 @@ namespace SignalR
         private bool _disconnected;
         private bool _aborted;
         private readonly Lazy<TraceSource> _traceSource;
+        private static readonly ConcurrentDictionary<string, TaskCompletionSource<object>> _acks = new ConcurrentDictionary<string, TaskCompletionSource<object>>();
 
         public Connection(IMessageBus newMessageBus,
                           IJsonSerializer jsonSerializer,
@@ -87,10 +89,11 @@ namespace SignalR
         {
             Message message = CreateMessage(key, value);
 
-            if (message.IsCommand)
+            if (message.WaitForAck)
             {
-                // REVIEW: What do we need to pass for the cancellation token here
-                Task ackTask = _bus.ReceiveAck(message, CancellationToken.None);
+                Debug.WriteLine("Wating for ACK from {0}", (object)message.CommandId);
+
+                Task ackTask = _acks.GetOrAdd(message.CommandId, _ => new TaskCompletionSource<object>()).Task;
                 return _bus.Publish(message).Then(task => task, ackTask);
             }
 
@@ -106,6 +109,7 @@ namespace SignalR
             {
                 // Set the command id
                 message.CommandId = command.Id;
+                message.WaitForAck = command.WaitForAck;
             }
 
             return message;
@@ -145,15 +149,28 @@ namespace SignalR
 
         private void ProcessResults(MessageResult result)
         {
-            result.Messages.Enumerate(message => message.IsCommand,
+            result.Messages.Enumerate(message => message.IsCommand || message.IsAck,
                                       message =>
                                       {
-                                          var command = _serializer.Parse<Command>(message.Value);
-                                          ProcessCommand(command);
+                                          if (message.IsAck)
+                                          {
+                                              TaskCompletionSource<object> tcs;
+                                              if (_acks.TryRemove(message.CommandId, out tcs))
+                                              {
+                                                  Debug.WriteLine("Received ACK for {0}", (object)message.CommandId);
+                                                  tcs.TrySetResult(null);
+                                              }
+                                          }
+                                          else
+                                          {
+                                              var command = _serializer.Parse<Command>(message.Value);
+                                              ProcessCommand(command);
 
-                                          // Send a message through the bus confirming that we got the message
-                                          // REVIEW: Do we retry if this fails?
-                                          _bus.Ack(_connectionId, message.Key, message.CommandId).Catch();
+
+                                              // Send a message through the bus confirming that we got the message
+                                              // REVIEW: Do we retry if this fails?
+                                              _bus.Ack(_connectionId, message.Key, message.CommandId).Catch();
+                                          }
                                       });
         }
 
