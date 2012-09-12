@@ -336,6 +336,13 @@ namespace SignalR
                 List<ArraySegment<Message>> items = null;
                 var cursors = new List<Cursor>();
 
+                if (!Alive)
+                {
+                    // If this subscription is dead then return immediately
+                    taskCompletionSource.TrySetResult(null);
+                    return;
+                }
+
                 lock (_lockObj)
                 {
                     items = new List<ArraySegment<Message>>(Cursors.Count);
@@ -384,6 +391,10 @@ namespace SignalR
                             }
                             else
                             {
+                                // If we're done pumping messages through to this subscription
+                                // then dispose
+                                Dispose();
+
                                 // If the callback said it's done then stop
                                 taskCompletionSource.TrySetResult(null);
                             }
@@ -419,6 +430,10 @@ namespace SignalR
                     }
                     else
                     {
+                        // If we're done pumping messages through to this subscription
+                        // then dispose
+                        Dispose();
+
                         // If the callback said it's done then stop
                         taskCompletionSource.TrySetResult(null);
                     }
@@ -767,7 +782,7 @@ namespace SignalR
             private int _busyWorkers;
 
             // The interval at which to check if there's work to be done
-            private static readonly TimeSpan CheckWorkInterval = TimeSpan.FromSeconds(1);
+            private static readonly TimeSpan CheckWorkInterval = TimeSpan.FromSeconds(5);
 
             private Timer _timer;
 
