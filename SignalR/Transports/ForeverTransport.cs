@@ -241,6 +241,7 @@ namespace SignalR.Transports
 
                     endRequest();
                     registration.Dispose();
+                    subscription.Dispose();
 
                     return TaskAsyncHelper.False;
                 }
