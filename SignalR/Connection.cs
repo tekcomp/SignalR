@@ -91,8 +91,6 @@ namespace SignalR
 
             if (message.WaitForAck)
             {
-                Debug.WriteLine("Wating for ACK from {0}", (object)message.CommandId);
-
                 Task ackTask = _acks.GetOrAdd(message.CommandId, _ => new TaskCompletionSource<object>()).Task;
                 return _bus.Publish(message).Then(task => task, ackTask);
             }
@@ -122,7 +120,6 @@ namespace SignalR
                 response.MessageId = result.LastMessageId;
             });
         }
-
         public IDisposable Receive(string messageId, Func<PersistentResponse, Task<bool>> callback, int maxMessages)
         {
             return _bus.Subscribe(this, messageId, result => callback(GetResponse(result)), maxMessages);
@@ -157,7 +154,6 @@ namespace SignalR
                                               TaskCompletionSource<object> tcs;
                                               if (_acks.TryRemove(message.CommandId, out tcs))
                                               {
-                                                  Debug.WriteLine("Received ACK for {0}", (object)message.CommandId);
                                                   tcs.TrySetResult(null);
                                               }
                                           }
@@ -165,7 +161,6 @@ namespace SignalR
                                           {
                                               var command = _serializer.Parse<Command>(message.Value);
                                               ProcessCommand(command);
-
 
                                               // Send a message through the bus confirming that we got the message
                                               // REVIEW: Do we retry if this fails?
