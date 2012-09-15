@@ -1,0 +1,13 @@
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <SilverlightBuildResources>$(CompileTimeSolutionDir)Build\WP7\</SilverlightBuildResources>
+    <TargetFrameworkDirectory>$(SilverlightBuildResources)WP71 Reference Assemblies\</TargetFrameworkDirectory>
+    <TargetFrameworkSDKDirectory>$(SilverlightBuildResources)WP71 Reference Assemblies\</TargetFrameworkSDKDirectory>
+    <_TargetFrameworkSDKDirectoryItem>$(SilverlightBuildResources)WP71 Reference Assemblies\</_TargetFrameworkSDKDirectoryItem>
+    <_FullFrameworkReferenceAssemblyPaths>$(SilverlightBuildResources)WP71 Reference Assemblies\;</_FullFrameworkReferenceAssemblyPaths>
+    <_TargetFrameworkDirectories>$(SilverlightBuildResources)WP71 Reference Assemblies\;</_TargetFrameworkDirectories>
+    <SilverlightRuntimeVersion>4.7.50308.0</SilverlightRuntimeVersion>
+  </PropertyGroup>
+  <Import Project="Microsoft.Silverlight.WindowsPhone.Overrides.targets" />
+  <Import Project="Microsoft.Silverlight.CSharp.targets" />
+</Project>
