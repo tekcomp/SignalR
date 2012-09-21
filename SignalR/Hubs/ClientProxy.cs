@@ -7,25 +7,18 @@ namespace SignalR.Hubs
     {
         private readonly IConnection _connection;
         private readonly string _hubName;
+        private readonly bool _sendToAll;
 
         public ClientProxy(IConnection connection, string hubName)
+            : this(connection, hubName, sendToAll: true)
+        {
+        }
+
+        public ClientProxy(IConnection connection, string hubName, bool sendToAll)
         {
             _connection = connection;
             _hubName = hubName;
-        }
-
-        public dynamic this[string key]
-        {
-            get
-            {
-                return new SignalProxy(_connection, key, _hubName);
-            }
-        }
-
-        public override bool TryGetMember(GetMemberBinder binder, out object result)
-        {
-            result = this[binder.Name];
-            return true;
+            _sendToAll = sendToAll;
         }
 
         public override bool TryInvokeMember(InvokeMemberBinder binder, object[] args, out object result)
@@ -43,7 +36,13 @@ namespace SignalR.Hubs
                 Args = args
             };
 
-            return _connection.Send(_hubName, invocation);
+            if (_sendToAll)
+            {
+                return _connection.Send(_hubName, invocation);
+            }
+
+            var message = new ConnectionMessage(_hubName, invocation, ignoreSender: true);
+            return _connection.Send(message);
         }
     }
 }

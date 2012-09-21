@@ -22,17 +22,17 @@ namespace SignalR.Samples.Hubs.DemoHub
         {
             Groups.Add(Context.ConnectionId, "foo");
             Groups.Add(Context.ConnectionId, "bar");
-            Caller.groupAdded();
+            Clients.Caller.groupAdded();
         }
 
         public void DoSomethingAndCallError()
         {
-            Clients.errorInCallback();
+            Clients.All.errorInCallback();
         }
 
         public Task DynamicTask()
         {
-            return Clients.signal(Guid.NewGuid());
+            return Clients.All.signal(Guid.NewGuid());
         }
 
         public Task PlainTask()
@@ -76,14 +76,14 @@ namespace SignalR.Samples.Hubs.DemoHub
 
         public string ReadStateValue()
         {
-            return Caller.name;
+            return Clients.Caller.name;
         }
 
         public string SetStateValue(string value)
         {
-            Caller.Company = value;
+            Clients.Caller.Company = value;
 
-            return Caller.Company;
+            return Clients.Caller.Company;
         }
 
         public void ComplexArray(Person[] people)
@@ -93,7 +93,7 @@ namespace SignalR.Samples.Hubs.DemoHub
 
         public Person ComplexType(Person p)
         {
-            Caller.person = p;
+            Clients.Caller.person = p;
             return p;
         }
 
@@ -106,8 +106,8 @@ namespace SignalR.Samples.Hubs.DemoHub
         {
             for (int i = 0; i < 10; i++)
             {
-                Caller.index = i + 1;
-                Caller.invoke(i);
+                Clients.Caller.index = i + 1;
+                Clients.Caller.invoke(i);
                 Thread.Sleep(1000);
             }
         }
@@ -133,19 +133,19 @@ namespace SignalR.Samples.Hubs.DemoHub
         }
 
         public void TestGuid()
-        {            
-            Caller.TestGuid(new Guid());
+        {
+            Clients.Caller.TestGuid(new Guid());
         }
 
         public void DynamicInvoke(string method)
         {
-            IClientProxy proxy = Caller;
+            IClientProxy proxy = Clients.Caller;
             proxy.Invoke(method);
         }
 
         public void MispelledClientMethod()
         {
-            Caller.clientMethd();
+            Clients.Caller.clientMethd();
         }
 
         public override IEnumerable<string> RejoiningGroups(IEnumerable<string> groups)

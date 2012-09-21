@@ -235,8 +235,7 @@ namespace SignalR.Hubs
                 {
                     state = state ?? new TrackingDictionary();
                     hub.Context = new HubCallerContext(request, connectionId);
-                    hub.Caller = new StatefulSignalProxy(Connection, connectionId, descriptor.Name, state);
-                    hub.Clients = new ClientProxy(Connection, descriptor.Name);
+                    hub.Clients = new HubConnectionContext(Connection, descriptor.Name, connectionId, state);
                     hub.Groups = new GroupManager(Connection, descriptor.Name);
                 }
 

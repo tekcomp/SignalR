@@ -114,6 +114,14 @@ namespace SignalR
             return _bus.Publish(message);
         }
 
+        public Task Send(ConnectionMessage message)
+        {
+            Message busMessage = CreateMessage(message.Signal, message.Value);
+            busMessage.IgnoreSender = message.IgnoreSender;
+
+            return _bus.Publish(busMessage);
+        }
+
         private Message CreateMessage(string key, object value)
         {
             var command = value as Command;
@@ -174,10 +182,14 @@ namespace SignalR
 
         private void ProcessResults(MessageResult result)
         {
-            result.Messages.Enumerate(message => message.IsCommand || message.IsAck,
+            result.Messages.Enumerate(message => message.IsCommand || message.IsAck || message.IgnoreSender,
                                       message =>
                                       {
-                                          if (message.IsAck)
+                                          if (message.IgnoreSender)
+                                          {
+                                              message.Skip = _connectionId.Equals(message.Source);
+                                          }
+                                          else if (message.IsAck)
                                           {
                                               _ackHandler.TriggerAck(message.CommandId);
                                           }
