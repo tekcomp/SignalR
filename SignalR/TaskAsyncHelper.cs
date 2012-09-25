@@ -65,7 +65,7 @@ namespace SignalR
         }
 
 #if PERFCOUNTERS
-        public static TTask Catch<TTask>(this TTask task, params PerformanceCounter[] counters) where TTask : Task
+        public static TTask Catch<TTask>(this TTask task, params IPerformanceCounter[] counters) where TTask : Task
         {
             return Catch(task, _ => 
                 {
@@ -75,7 +75,7 @@ namespace SignalR
                     }
                     for (var i = 0; i < counters.Length; i++)
                     {
-                        counters[i].SafeIncrement();
+                        counters[i].Increment();
                     }
                 });
         }
